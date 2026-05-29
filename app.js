@@ -494,10 +494,6 @@ function bindEvents() {
   el("copy-link-button").addEventListener("click", copyTripLink);
   el("refresh-button").addEventListener("click", refreshData);
 
-  el("friend-name").addEventListener("keydown", event => {
-    if (event.key === "Enter") addFriend();
-  });
-
   el("trip-name").addEventListener("keydown", event => {
     if (event.key === "Enter") createTrip();
   });
