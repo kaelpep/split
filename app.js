@@ -7,8 +7,8 @@ const supabaseAnonKey = config.supabaseAnonKey || "";
 const supabaseReady =
   supabaseUrl.startsWith("https://") &&
   supabaseAnonKey.length > 20 &&
-  !supabaseUrl.includes("PASTE_") &&
-  !supabaseAnonKey.includes("PASTE_");
+  !supabaseUrl.includes("https://drnhtuqhfyouqjwuaame.supabase.co") &&
+  !supabaseAnonKey.includes("sb_publishable_Cy5ML8RjFnEYSxWGPCqf6Q_jYDl9Wzv");
 
 const db = supabaseReady ? supabase.createClient(supabaseUrl, supabaseAnonKey) : null;
 
