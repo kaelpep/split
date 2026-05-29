@@ -486,31 +486,23 @@ async function copyTripLink() {
 }
 
 function bindEvents() {
-  el("create-trip-button").addEventListener("click", createTrip);
-  el("load-trip-button").addEventListener("click", loadTripFromInput);
   el("add-purchase-button").addEventListener("click", addPurchase);
   el("select-all-button").addEventListener("click", selectAllSplit);
   el("clear-split-button").addEventListener("click", clearSplit);
   el("copy-link-button").addEventListener("click", copyTripLink);
   el("refresh-button").addEventListener("click", refreshData);
 
-  el("trip-name").addEventListener("keydown", event => {
-    if (event.key === "Enter") createTrip();
-  });
-
-  el("trip-id-input").addEventListener("keydown", event => {
-    if (event.key === "Enter") loadTripFromInput();
-  });
 }
 
 window.addEventListener("load", async () => {
   bindEvents();
   render();
 
-  const params = new URLSearchParams(window.location.search);
-  const tripId = params.get("trip");
+  const tripId = config.defaultTripId;
 
   if (supabaseReady && tripId) {
     await loadTrip(tripId);
+  } else {
+    toast("add a default trip id in config.js.");
   }
 });
