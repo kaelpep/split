@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>split</title>
-  <meta name="description" content="a simple shared expense splitter powered by supabase.">
+  <meta name="description" content="math is for losers">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="manifest" href="manifest.json">
   <style>
@@ -13,13 +13,11 @@
   </style>
 </head>
 <body>
-  <header><h1>split</h1><p class="subtitle">a shared weekend expense tracker with supabase storage, receipt uploads, split checklists, running purchases and clean settle-up math.</p></header>
+  <header><h1>split</h1><p class="subtitle">math is for losers</p></header>
   <main>
     <section class="card">
       <div id="config-warning" class="notice hidden">check <code>config.js</code>. the app needs a supabase url, anon key and default trip id.</div>
       <h2>purchaser</h2><div id="purchaser-buttons" class="person-grid"></div>
-      <h3>people</h3><div id="friends" class="friend-list"></div>
-      <div class="divider"></div>
       <h2>purchase info</h2>
       <label for="description">what was it?</label><input id="description">
       <div class="row two"><div><label for="amount">amount</label><input id="amount" type="number" min="0" step="0.01"></div><div><label for="receipt">receipt upload optional</label><input id="receipt" type="file" accept="image/*,.pdf"></div></div>
