@@ -5,4 +5,5 @@
 window.SPLIT_CONFIG = {
   supabaseUrl: "https://drnhtuqhfyouqjwuaame.supabase.co",
   supabaseAnonKey: "sb_publishable_Cy5ML8RjFnEYSxWGPCqf6Q_jYDl9Wzv"
+  defaultTripId: "los_angeles"
 };
