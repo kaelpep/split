@@ -488,7 +488,6 @@ async function copyTripLink() {
 function bindEvents() {
   el("create-trip-button").addEventListener("click", createTrip);
   el("load-trip-button").addEventListener("click", loadTripFromInput);
-  el("add-friend-button").addEventListener("click", addFriend);
   el("add-purchase-button").addEventListener("click", addPurchase);
   el("select-all-button").addEventListener("click", selectAllSplit);
   el("clear-split-button").addEventListener("click", clearSplit);
