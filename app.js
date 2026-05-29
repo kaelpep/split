@@ -1,6 +1,6 @@
 const DEFAULT_FRIENDS = ["sam", "hunter", "amanda", "mick", "rod"];
 
-const config = window.TRIP_SPLITTER_CONFIG || {};
+const config = window.SPLIT_CONFIG || {};
 const supabaseUrl = config.supabaseUrl || "";
 const supabaseAnonKey = config.supabaseAnonKey || "";
 
