@@ -1,1 +1,548 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>trip splitter</title>
+  <meta name="description" content="a simple shared trip expense splitter powered by supabase.">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    :root {
+      --bg: #0b0b0b;
+      --bg-soft: #111111;
+      --card: #171717;
+      --card-2: #202020;
+      --ink: #f3f3f3;
+      --muted: #a1a1a1;
+      --soft: #d4d4d4;
+      --line: #303030;
+      --line-2: #3f3f3f;
+      --button: #e7e7e7;
+      --button-text: #0f0f0f;
+      --button-hover: #ffffff;
+      --danger: #ef4444;
+      --good: #22c55e;
+      --warning: #facc15;
+      --shadow: 0 18px 55px rgba(0,0,0,.42);
+      --radius: 22px;
+    }
 
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      color-scheme: dark;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,.08), transparent 28rem),
+        radial-gradient(circle at bottom right, rgba(255,255,255,.04), transparent 30rem),
+        linear-gradient(135deg, #070707 0%, #151515 100%);
+      color: var(--ink);
+      font-family: inter, ui-sans-serif, system-ui, -apple-system, blinkmacsystemfont, "segoe ui", sans-serif;
+      text-transform: lowercase;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+      text-transform: lowercase;
+    }
+
+    header {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 34px 18px 14px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.4rem, 8vw, 5.4rem);
+      line-height: .86;
+      letter-spacing: -.08em;
+      background: linear-gradient(180deg, #ffffff 0%, #b8b8b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      margin: 14px 0 0;
+      max-width: 720px;
+      color: var(--muted);
+      font-size: 1.02rem;
+      line-height: 1.5;
+    }
+
+    main {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 12px 18px 52px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+
+    @media (min-width: 980px) {
+      main {
+        grid-template-columns: 420px 1fr;
+        align-items: start;
+      }
+    }
+
+    .card {
+      background: rgba(23,23,23,.92);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      backdrop-filter: blur(12px);
+    }
+
+    @media (min-width: 720px) {
+      .card {
+        padding: 22px;
+      }
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 1.35rem;
+      letter-spacing: -.04em;
+    }
+
+    h3 {
+      margin: 20px 0 10px;
+      font-size: 1rem;
+      letter-spacing: -.02em;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 7px;
+      color: var(--muted);
+      font-size: .86rem;
+      font-weight: 700;
+    }
+
+    input,
+    select {
+      width: 100%;
+      border: 1px solid var(--line-2);
+      background: #222222;
+      color: var(--ink);
+      border-radius: 14px;
+      padding: 12px 13px;
+      outline: none;
+      font-size: 1rem;
+    }
+
+    input::placeholder {
+      color: #686868;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: #888888;
+      box-shadow: 0 0 0 3px rgba(255,255,255,.08);
+    }
+
+    input[type="file"] {
+      padding: 10px;
+      color: var(--muted);
+    }
+
+    button {
+      border: 0;
+      background: var(--button);
+      color: var(--button-text);
+      border-radius: 999px;
+      padding: 11px 15px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: .16s ease;
+      white-space: nowrap;
+    }
+
+    button:hover {
+      background: var(--button-hover);
+      transform: translateY(-1px);
+    }
+
+    button.secondary {
+      background: #2d2d2d;
+      color: var(--ink);
+      border: 1px solid #3b3b3b;
+    }
+
+    button.secondary:hover {
+      background: #3a3a3a;
+    }
+
+    button.ghost {
+      background: transparent;
+      color: #cfcfcf;
+      border: 1px solid var(--line-2);
+    }
+
+    button.danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid rgba(239,68,68,.38);
+    }
+
+    button.person {
+      background: #242424;
+      color: var(--ink);
+      border: 1px solid #414141;
+      justify-content: center;
+    }
+
+    button.person.active {
+      background: #f5f5f5;
+      color: #0e0e0e;
+      border-color: #f5f5f5;
+    }
+
+    .button-row,
+    .person-grid {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .button-row {
+      margin-top: 14px;
+    }
+
+    .person-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @media (min-width: 480px) {
+      .person-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    @media (min-width: 600px) {
+      .row.two {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .row.input-button {
+        grid-template-columns: 1fr auto;
+      }
+    }
+
+    .notice {
+      border: 1px solid rgba(250,204,21,.38);
+      background: rgba(250,204,21,.1);
+      color: #ffe789;
+      padding: 12px;
+      border-radius: 16px;
+      font-size: .9rem;
+      line-height: 1.45;
+      margin-bottom: 14px;
+    }
+
+    .notice code {
+      background: rgba(255,255,255,.08);
+      padding: 2px 5px;
+      border-radius: 6px;
+      color: #fff;
+      text-transform: none;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .friend-list,
+    .purchase-list,
+    .settlement-list,
+    .balance-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .pill,
+    .purchase-card,
+    .split-box,
+    .trip-box {
+      background: #202020;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+    }
+
+    .pill {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 11px 12px;
+    }
+
+    .split-box {
+      padding: 12px;
+      display: grid;
+      gap: 9px;
+    }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0;
+      color: var(--ink);
+      font-weight: 520;
+    }
+
+    .check-row input {
+      width: auto;
+      transform: scale(1.12);
+      accent-color: #f5f5f5;
+    }
+
+    .trip-box,
+    .empty {
+      padding: 14px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .empty {
+      border: 1px dashed var(--line-2);
+      border-radius: 16px;
+      background: rgba(255,255,255,.025);
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .small {
+      font-size: .86rem;
+    }
+
+    .purchase-card {
+      padding: 13px;
+    }
+
+    .purchase-top {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    @media (min-width: 600px) {
+      .purchase-top {
+        grid-template-columns: 1fr auto;
+        align-items: start;
+      }
+    }
+
+    .amount {
+      font-size: 1.05rem;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    @media (min-width: 720px) {
+      .summary-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .money-positive {
+      color: var(--good);
+      font-weight: 850;
+    }
+
+    .money-negative {
+      color: var(--danger);
+      font-weight: 850;
+    }
+
+    .receipt-link {
+      display: inline-flex;
+      margin-top: 7px;
+      color: #f1f1f1;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      font-size: .86rem;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: #f5f5f5;
+      color: #0b0b0b;
+      padding: 10px 14px;
+      border-radius: 999px;
+      opacity: 0;
+      pointer-events: none;
+      transition: .2s ease;
+      font-size: .92rem;
+      font-weight: 700;
+      z-index: 50;
+      max-width: min(92vw, 520px);
+      text-align: center;
+    }
+
+    .toast.show {
+      opacity: 1;
+      bottom: 28px;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--line);
+      margin: 20px 0;
+    }
+
+    .right-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+    }
+
+    @media (min-width: 600px) {
+      .right-actions {
+        justify-content: flex-end;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>trip splitter</h1>
+    <p class="subtitle">a shared weekend expense tracker with supabase storage, receipt uploads, split checklists, running purchases and clean settle-up math.</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <div id="config-warning" class="notice hidden">
+        add your supabase url and anon key in <code>config.js</code>. then run <code>schema.sql</code> in supabase.
+      </div>
+
+      <h2>trip</h2>
+
+      <label for="trip-name">create new trip</label>
+      <div class="row input-button">
+        <input id="trip-name">
+        <button id="create-trip-button">create</button>
+      </div>
+
+      <label for="trip-id-input">or load trip id</label>
+      <div class="row input-button">
+        <input id="trip-id-input">
+        <button class="secondary" id="load-trip-button">load</button>
+      </div>
+
+      <div id="current-trip-box" class="trip-box" style="margin-top:14px;">no trip loaded yet.</div>
+
+      <div class="divider"></div>
+
+      <h2>purchaser</h2>
+      <div id="purchaser-buttons" class="person-grid"></div>
+
+      <label for="friend-name">add another friend</label>
+      <div class="row input-button">
+        <input id="friend-name">
+        <button id="add-friend-button">add</button>
+      </div>
+
+      <h3>people</h3>
+      <div id="friends" class="friend-list"></div>
+
+      <div class="divider"></div>
+
+      <h2>purchase info</h2>
+
+      <label for="description">what was it?</label>
+      <input id="description">
+
+      <div class="row two">
+        <div>
+          <label for="amount">amount</label>
+          <input id="amount" type="number" min="0" step="0.01">
+        </div>
+        <div>
+          <label for="receipt">receipt upload optional</label>
+          <input id="receipt" type="file" accept="image/*,.pdf">
+        </div>
+      </div>
+
+      <label>split between</label>
+      <div id="split-between" class="split-box"></div>
+
+      <div class="button-row">
+        <button id="add-purchase-button">add purchase</button>
+        <button class="secondary" id="select-all-button">select all</button>
+        <button class="secondary" id="clear-split-button">clear</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="toolbar">
+        <h2 style="margin:0;">summary</h2>
+        <div class="button-row" style="margin:0;">
+          <button class="secondary" id="copy-link-button">copy trip link</button>
+          <button class="secondary" id="refresh-button">refresh</button>
+        </div>
+      </div>
+
+      <div class="summary-grid">
+        <div>
+          <h3>total owed by person</h3>
+          <div id="balances" class="balance-list"></div>
+        </div>
+        <div>
+          <h3>suggested payments</h3>
+          <div id="settlements" class="settlement-list"></div>
+        </div>
+      </div>
+
+      <h3>running list of purchases</h3>
+      <div id="purchases" class="purchase-list"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
