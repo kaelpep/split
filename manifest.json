@@ -1,10 +1,10 @@
 {
-  "name": "trip splitter",
-  "short_name": "trip splitter",
+  "name": "split",
+  "short_name": "split app",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#0b0b0b",
   "theme_color": "#0b0b0b",
-  "description": "a shared expense tracker for weekend trips.",
+  "description": "because math is for losers",
   "icons": []
 }
