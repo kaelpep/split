@@ -1,147 +1,22 @@
--- trip splitter schema
+-- split schema
 -- run this in supabase > sql editor > new query.
-
 create extension if not exists "pgcrypto";
-
-create table if not exists public.trips (
-  id uuid primary key default gen_random_uuid(),
-  name text not null default 'weekend trip',
-  created_at timestamptz not null default now()
-);
-
-create table if not exists public.trip_members (
-  id uuid primary key default gen_random_uuid(),
-  trip_id uuid not null references public.trips(id) on delete cascade,
-  name text not null,
-  created_at timestamptz not null default now()
-);
-
-create table if not exists public.expenses (
-  id uuid primary key default gen_random_uuid(),
-  trip_id uuid not null references public.trips(id) on delete cascade,
-  description text not null,
-  amount numeric(12,2) not null check (amount > 0),
-  payer_member_id uuid not null references public.trip_members(id) on delete restrict,
-  receipt_url text,
-  created_at timestamptz not null default now()
-);
-
-create table if not exists public.expense_splits (
-  id uuid primary key default gen_random_uuid(),
-  trip_id uuid not null references public.trips(id) on delete cascade,
-  expense_id uuid not null references public.expenses(id) on delete cascade,
-  member_id uuid not null references public.trip_members(id) on delete cascade,
-  created_at timestamptz not null default now(),
-  unique(expense_id, member_id)
-);
-
-create index if not exists trip_members_trip_id_idx on public.trip_members(trip_id);
-create index if not exists expenses_trip_id_idx on public.expenses(trip_id);
-create index if not exists expense_splits_trip_id_idx on public.expense_splits(trip_id);
-create index if not exists expense_splits_expense_id_idx on public.expense_splits(expense_id);
-
-alter table public.trips enable row level security;
-alter table public.trip_members enable row level security;
-alter table public.expenses enable row level security;
-alter table public.expense_splits enable row level security;
-
-drop policy if exists "anon can read trips" on public.trips;
-drop policy if exists "anon can insert trips" on public.trips;
-drop policy if exists "anon can update trips" on public.trips;
-drop policy if exists "anon can delete trips" on public.trips;
-
-create policy "anon can read trips" on public.trips
-for select to anon using (true);
-
-create policy "anon can insert trips" on public.trips
-for insert to anon with check (true);
-
-create policy "anon can update trips" on public.trips
-for update to anon using (true) with check (true);
-
-create policy "anon can delete trips" on public.trips
-for delete to anon using (true);
-
-drop policy if exists "anon can read trip members" on public.trip_members;
-drop policy if exists "anon can insert trip members" on public.trip_members;
-drop policy if exists "anon can update trip members" on public.trip_members;
-drop policy if exists "anon can delete trip members" on public.trip_members;
-
-create policy "anon can read trip members" on public.trip_members
-for select to anon using (true);
-
-create policy "anon can insert trip members" on public.trip_members
-for insert to anon with check (true);
-
-create policy "anon can update trip members" on public.trip_members
-for update to anon using (true) with check (true);
-
-create policy "anon can delete trip members" on public.trip_members
-for delete to anon using (true);
-
-drop policy if exists "anon can read expenses" on public.expenses;
-drop policy if exists "anon can insert expenses" on public.expenses;
-drop policy if exists "anon can update expenses" on public.expenses;
-drop policy if exists "anon can delete expenses" on public.expenses;
-
-create policy "anon can read expenses" on public.expenses
-for select to anon using (true);
-
-create policy "anon can insert expenses" on public.expenses
-for insert to anon with check (true);
-
-create policy "anon can update expenses" on public.expenses
-for update to anon using (true) with check (true);
-
-create policy "anon can delete expenses" on public.expenses
-for delete to anon using (true);
-
-drop policy if exists "anon can read expense splits" on public.expense_splits;
-drop policy if exists "anon can insert expense splits" on public.expense_splits;
-drop policy if exists "anon can update expense splits" on public.expense_splits;
-drop policy if exists "anon can delete expense splits" on public.expense_splits;
-
-create policy "anon can read expense splits" on public.expense_splits
-for select to anon using (true);
-
-create policy "anon can insert expense splits" on public.expense_splits
-for insert to anon with check (true);
-
-create policy "anon can update expense splits" on public.expense_splits
-for update to anon using (true) with check (true);
-
-create policy "anon can delete expense splits" on public.expense_splits
-for delete to anon using (true);
-
--- optional receipt uploads.
--- supabase storage bucket names are lowercase.
-insert into storage.buckets (id, name, public)
-values ('receipts', 'receipts', true)
-on conflict (id) do update set public = true;
-
-drop policy if exists "anon can upload receipts" on storage.objects;
-drop policy if exists "anon can read receipts" on storage.objects;
-drop policy if exists "anon can update receipts" on storage.objects;
-drop policy if exists "anon can delete receipts" on storage.objects;
-
-create policy "anon can upload receipts" on storage.objects
-for insert to anon
-with check (bucket_id = 'receipts');
-
-create policy "anon can read receipts" on storage.objects
-for select to anon
-using (bucket_id = 'receipts');
-
-create policy "anon can update receipts" on storage.objects
-for update to anon
-using (bucket_id = 'receipts')
-with check (bucket_id = 'receipts');
-
-create policy "anon can delete receipts" on storage.objects
-for delete to anon
-using (bucket_id = 'receipts');
-
--- important:
--- this mvp uses anonymous access and shareable trip ids.
--- anyone with the trip link can view or edit that trip.
--- for private/sensitive use, add supabase auth and membership-based rls.
+create table if not exists public.trips (id uuid primary key default gen_random_uuid(), name text not null default 'split', created_at timestamptz not null default now());
+create table if not exists public.trip_members (id uuid primary key default gen_random_uuid(), trip_id uuid not null references public.trips(id) on delete cascade, name text not null, created_at timestamptz not null default now());
+create table if not exists public.expenses (id uuid primary key default gen_random_uuid(), trip_id uuid not null references public.trips(id) on delete cascade, description text not null, amount numeric(12,2) not null check (amount > 0), payer_member_id uuid not null references public.trip_members(id) on delete restrict, receipt_url text, created_at timestamptz not null default now());
+create table if not exists public.expense_splits (id uuid primary key default gen_random_uuid(), trip_id uuid not null references public.trips(id) on delete cascade, expense_id uuid not null references public.expenses(id) on delete cascade, member_id uuid not null references public.trip_members(id) on delete cascade, created_at timestamptz not null default now(), unique(expense_id, member_id));
+create index if not exists trip_members_trip_id_idx on public.trip_members(trip_id); create index if not exists expenses_trip_id_idx on public.expenses(trip_id); create index if not exists expense_splits_trip_id_idx on public.expense_splits(trip_id); create index if not exists expense_splits_expense_id_idx on public.expense_splits(expense_id);
+alter table public.trips enable row level security; alter table public.trip_members enable row level security; alter table public.expenses enable row level security; alter table public.expense_splits enable row level security;
+drop policy if exists "anon can read trips" on public.trips; drop policy if exists "anon can insert trips" on public.trips; drop policy if exists "anon can update trips" on public.trips; drop policy if exists "anon can delete trips" on public.trips;
+create policy "anon can read trips" on public.trips for select to anon using (true); create policy "anon can insert trips" on public.trips for insert to anon with check (true); create policy "anon can update trips" on public.trips for update to anon using (true) with check (true); create policy "anon can delete trips" on public.trips for delete to anon using (true);
+drop policy if exists "anon can read trip members" on public.trip_members; drop policy if exists "anon can insert trip members" on public.trip_members; drop policy if exists "anon can update trip members" on public.trip_members; drop policy if exists "anon can delete trip members" on public.trip_members;
+create policy "anon can read trip members" on public.trip_members for select to anon using (true); create policy "anon can insert trip members" on public.trip_members for insert to anon with check (true); create policy "anon can update trip members" on public.trip_members for update to anon using (true) with check (true); create policy "anon can delete trip members" on public.trip_members for delete to anon using (true);
+drop policy if exists "anon can read expenses" on public.expenses; drop policy if exists "anon can insert expenses" on public.expenses; drop policy if exists "anon can update expenses" on public.expenses; drop policy if exists "anon can delete expenses" on public.expenses;
+create policy "anon can read expenses" on public.expenses for select to anon using (true); create policy "anon can insert expenses" on public.expenses for insert to anon with check (true); create policy "anon can update expenses" on public.expenses for update to anon using (true) with check (true); create policy "anon can delete expenses" on public.expenses for delete to anon using (true);
+drop policy if exists "anon can read expense splits" on public.expense_splits; drop policy if exists "anon can insert expense splits" on public.expense_splits; drop policy if exists "anon can update expense splits" on public.expense_splits; drop policy if exists "anon can delete expense splits" on public.expense_splits;
+create policy "anon can read expense splits" on public.expense_splits for select to anon using (true); create policy "anon can insert expense splits" on public.expense_splits for insert to anon with check (true); create policy "anon can update expense splits" on public.expense_splits for update to anon using (true) with check (true); create policy "anon can delete expense splits" on public.expense_splits for delete to anon using (true);
+insert into storage.buckets (id, name, public) values ('receipts', 'receipts', true) on conflict (id) do update set public = true;
+drop policy if exists "anon can upload receipts" on storage.objects; drop policy if exists "anon can read receipts" on storage.objects; drop policy if exists "anon can update receipts" on storage.objects; drop policy if exists "anon can delete receipts" on storage.objects;
+create policy "anon can upload receipts" on storage.objects for insert to anon with check (bucket_id = 'receipts'); create policy "anon can read receipts" on storage.objects for select to anon using (bucket_id = 'receipts'); create policy "anon can update receipts" on storage.objects for update to anon using (bucket_id = 'receipts') with check (bucket_id = 'receipts'); create policy "anon can delete receipts" on storage.objects for delete to anon using (bucket_id = 'receipts');
+-- if you need to create the default trip manually, run this separately and use the returned id:
+-- insert into public.trips (name) values ('split') returning id;
